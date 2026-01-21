@@ -1,0 +1,271 @@
+import { Deck } from './Deck';
+import { Hand } from './Hand';
+import { audioManager } from '../utils/audio';
+
+export type GameState = 'waiting-bet' | 'dealing' | 'player-turn' | 'dealer-turn' | 'resolving';
+
+export interface GameStateListener {
+    onStateChange(state: GameState): void;
+    onHandsUpdate(dealerHand: Hand, playerHands: Hand[], currentHandIndex: number): void;
+    onMessage(msg: string): void;
+}
+
+export class BlackjackEngine {
+    deck: Deck;
+    dealerHand: Hand;
+    playerHands: Hand[]; // Support split hands
+    currentHandIndex: number;
+    state: GameState;
+
+    private listener?: GameStateListener;
+
+    constructor() {
+        this.deck = new Deck(6);
+        this.dealerHand = new Hand();
+        this.playerHands = [new Hand()];
+        this.currentHandIndex = 0;
+        this.state = 'waiting-bet';
+    }
+
+    setListener(listener: GameStateListener) {
+        this.listener = listener;
+    }
+
+    private notifyUpdate(msg: string = "") {
+        if (this.listener) {
+            this.listener.onStateChange(this.state);
+            this.listener.onHandsUpdate(this.dealerHand, this.playerHands, this.currentHandIndex);
+            if (msg) this.listener.onMessage(msg);
+        }
+    }
+
+    placeBet(amount: number) {
+        if (this.state !== 'waiting-bet' && this.state !== 'resolving') return;
+        if (amount <= 0) return;
+
+        this.playerHands = [new Hand(amount)];
+        this.dealerHand = new Hand();
+        this.currentHandIndex = 0;
+
+        this.startRound();
+    }
+
+    async startRound() {
+        this.state = 'dealing';
+
+        // Check shuffle needed
+        if (this.deck.needsShuffle) {
+            this.notifyUpdate("Shuffling deck...");
+            this.deck.reset(); // This resets AND shuffles
+        }
+
+        // Deal cards (Initial 2 each)
+        // Order: Player, Dealer, Player, Dealer (Hidden)
+        this.playerHands[0].addCard(this.deck.deal()); audioManager.playDealSound();
+        this.dealerHand.addCard(this.deck.deal()); audioManager.playDealSound();
+        this.playerHands[0].addCard(this.deck.deal()); audioManager.playDealSound();
+        this.dealerHand.addCard(this.deck.deal()); audioManager.playDealSound();
+
+        // Check instant Blackjack for Player
+        if (this.playerHands[0].isBlackjack) {
+            // Check dealer blackjack
+            if (this.dealerHand.cards[0].value >= 10 || this.dealerHand.cards[0].rank === 'A') {
+                // Dealer might have BJ too, let resolve happen naturally or peek?
+                // Standard US rule: Dealer peeks if Upcard is A or 10.
+                // If Dealer has BJ, push or lose immediately.
+            } else {
+                // Instant win 3:2
+                this.state = 'resolving';
+                this.notifyUpdate("Blackjack!");
+                return;
+            }
+        }
+
+        this.state = 'player-turn';
+        this.notifyUpdate("Your turn.");
+    }
+
+    hit() {
+        if (this.state !== 'player-turn') return;
+
+        const currentHand = this.playerHands[this.currentHandIndex];
+        currentHand.addCard(this.deck.deal());
+
+        if (currentHand.isBust) {
+            this.finishCurrentHand();
+        } else if (currentHand.value === 21) {
+            // Auto stand on 21? usually QOL feature
+            this.finishCurrentHand();
+        } else {
+            this.notifyUpdate();
+            // Just normal hit sound
+        }
+        audioManager.playDealSound();
+    }
+
+    stand() {
+        if (this.state !== 'player-turn') return;
+        this.finishCurrentHand();
+    }
+
+    double() {
+        if (this.state !== 'player-turn') return;
+        const currentHand = this.playerHands[this.currentHandIndex];
+        if (!currentHand.canDouble()) return; // Should be checked by UI too
+
+        // Double bet
+        currentHand.bet *= 2;
+        // Deal 1 card only
+        this.currentHandIndex = this.currentHandIndex; // logic update
+        const doubleCard = this.deck.deal();
+        currentHand.addCard(doubleCard);
+        audioManager.playDealSound();
+
+        this.finishCurrentHand();
+    }
+
+    split() {
+        if (this.state !== 'player-turn') return;
+        const currentHand = this.playerHands[this.currentHandIndex];
+        if (!currentHand.canSplit()) return;
+        // Max splits check? MVP simplified: let's allow basic split first.
+
+        // Create new hand
+        const splitCard = currentHand.cards.pop()!;
+        const newHand = new Hand(currentHand.bet);
+        newHand.addCard(splitCard);
+
+        // Add new hand to array
+        this.playerHands.splice(this.currentHandIndex + 1, 0, newHand);
+
+        // Deal card to current hand
+        currentHand.addCard(this.deck.deal());
+        audioManager.playDealSound();
+
+        // Logic for Aces: if 'A' was split, usually only 1 card is dealt and then turn ends for that hand.
+        // For MVP simple logic: treat as normal but maybe restrict Hit if Ace?
+        // Dev doc: "Split Aces: A 分牌后，每手牌仅发 1 张牌，且不能再次分牌。"
+
+        if (currentHand.cards[0].rank === 'A') {
+            // Deal 1 card to the new hand too? Or wait for its turn?
+            // Usually, we play hands sequentially. 
+            // Current hand has 2 cards now. Since it was Ace split, force stand.
+            this.finishCurrentHand();
+        } else {
+            this.notifyUpdate("Split!");
+        }
+    }
+
+    private finishCurrentHand() {
+        if (this.currentHandIndex < this.playerHands.length - 1) {
+            this.currentHandIndex++;
+
+            // If the NEW hand is from a Split Ace, it needs its second card now?
+            // Or did we deal it at split time? 
+            // Simplified: We deal the second card when the hand becomes active.
+            const currentHand = this.playerHands[this.currentHandIndex];
+            // If it only has 1 card (from split), deal one.
+            if (currentHand.cards.length === 1) {
+                currentHand.addCard(this.deck.deal());
+                // If it was Split Ace, enforce rule: only 1 card.
+                if (currentHand.cards[0].rank === 'A') {
+                    // Auto stand after 1 card
+                    // But we need to update UI first?
+                    // Let's recursively finish if we want strict enforcement, or just let user see it.
+                }
+            }
+
+            this.notifyUpdate("Next hand.");
+        } else {
+            // All hands done
+            this.state = 'dealer-turn';
+            this.playDealer();
+        }
+    }
+
+    private async playDealer() {
+        this.notifyUpdate("Dealer's turn.");
+
+        // Check if all player hands busted. If so, dealer doesn't need to play (unless showing off).
+        const allBusted = this.playerHands.every(h => h.isBust);
+        if (allBusted) {
+            this.state = 'resolving';
+            this.notifyUpdate("Bust!");
+            return;
+        }
+
+        // Dealer Flip (handled visually by revealing hidden card)
+
+        // Soft 17 Rule: Dealer stands on Soft 17? 
+        // Doc: "Stand on Soft 17: 庄家软 17 点（A+6）时停牌"
+        // So dealer hits if < 17. (Soft 17 is >= 17, so stand).
+        // Wait, "Stand on Soft 17": means if dealer has Soft 17, he stands.
+        // "Hit on Soft 17" is the other variant.
+        // So condition: while (val < 17). 
+
+        try {
+            while (this.dealerHand.value < 17) {
+                await new Promise(r => setTimeout(r, 800)); // Delay for effect
+                if (this.deck.remainingCards === 0) {
+                    // Emergency shuffle if somehow empty
+                    this.deck.reset(); // reset() already shuffles
+                }
+                this.dealerHand.addCard(this.deck.deal());
+                this.notifyUpdate(); // Notify each card deal
+            }
+        } catch (e) {
+            console.error("Dealer loop error:", e);
+            this.notifyUpdate("Error: Dealer stopped.");
+        }
+
+        this.state = 'resolving';
+        this.notifyUpdate("Round Over.");
+    }
+
+    // Method to get results (Payouts)
+    getResults(): { handIndex: number, result: 'win' | 'lose' | 'push' | 'blackjack', profit: number }[] {
+        const results: { handIndex: number, result: 'win' | 'lose' | 'push' | 'blackjack', profit: number }[] = [];
+        const dealerVal = this.dealerHand.value;
+        const dealerBust = this.dealerHand.isBust;
+        const dealerBJ = this.dealerHand.isBlackjack;
+
+        this.playerHands.forEach((hand, index) => {
+            let profit = 0;
+            let result: 'win' | 'lose' | 'push' | 'blackjack' = 'push';
+
+            if (hand.isBust) {
+                result = 'lose';
+                profit = -hand.bet;
+            } else if (hand.isBlackjack) {
+                if (dealerBJ) {
+                    result = 'push';
+                    profit = 0;
+                } else {
+                    result = 'blackjack';
+                    profit = hand.bet * 1.5;
+                }
+            } else if (dealerBJ) {
+                result = 'lose'; // Player not BJ, Dealer BJ
+                profit = -hand.bet;
+            } else if (dealerBust) {
+                result = 'win';
+                profit = hand.bet;
+            } else {
+                // Compare values
+                if (hand.value > dealerVal) {
+                    result = 'win';
+                    profit = hand.bet;
+                } else if (hand.value < dealerVal) {
+                    result = 'lose';
+                    profit = -hand.bet;
+                } else {
+                    result = 'push';
+                    profit = 0;
+                }
+            }
+            results.push({ handIndex: index, result, profit });
+        });
+
+        return results;
+    }
+}
