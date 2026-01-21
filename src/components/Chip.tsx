@@ -32,12 +32,13 @@ export const Chip: React.FC<ChipProps> = ({ value }) => {
                 }
             }}
             className={`
-        w-16 h-16 rounded-full border-[6px] shadow-[0_6px_10px_rgba(0,0,0,0.5),inset_0_-4px_4px_rgba(0,0,0,0.3)] 
+        w-12 h-12 sm:w-16 sm:h-16 rounded-full border-[4px] sm:border-[6px] shadow-[0_6px_10px_rgba(0,0,0,0.5),inset_0_-4px_4px_rgba(0,0,0,0.3)] 
         flex items-center justify-center
-        text-white font-bold text-sm cursor-grab active:cursor-grabbing
+        text-white font-bold text-[10px] sm:text-sm cursor-grab active:cursor-grabbing
         border-dashed
         ${getColor(value)}
         relative
+        touch-none
       `}
         >
             {/* Inner Ring (Inlay contrast) */}

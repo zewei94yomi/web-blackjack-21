@@ -27,13 +27,15 @@ export const Card: React.FC<CardProps> = ({ card, hidden, index }) => {
             animate={{ opacity: 1, y: 0, x: 0, rotate: crypto.getRandomValues(new Uint32Array(1))[0] % 4 - 2, scale: 1 }}
             transition={{ type: "spring", stiffness: 200, damping: 20, delay: index * 0.1 }}
             className={`
-        relative w-32 h-48 rounded-lg shadow-[0_2px_5px_rgba(0,0,0,0.3),0_10px_20px_rgba(0,0,0,0.2)] 
+        relative 
+        w-20 h-32 sm:w-24 sm:h-36 md:w-32 md:h-48 
+        rounded-lg shadow-[0_2px_5px_rgba(0,0,0,0.3),0_10px_20px_rgba(0,0,0,0.2)] 
         ${hidden ? 'bg-[#003399]' : 'bg-[#fdfdfd]'}
         flex flex-col justify-between p-2.5
         select-none transform-gpu
         border-[0.5px] border-black/10 origin-bottom-left
       `}
-            style={{ marginLeft: index > 0 ? '-5rem' : '0' }}
+            style={{ marginLeft: index > 0 ? 'clamp(-3rem, -4rem, -5rem)' : '0' }}
         >
             {!hidden && card && (
                 <>

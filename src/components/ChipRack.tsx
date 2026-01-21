@@ -21,7 +21,7 @@ export const ChipRack: React.FC = () => {
     }
 
     return (
-        <div className="flex gap-6 items-center">
+        <div className="flex gap-2 sm:gap-6 items-center">
             {(gameState === 'waiting-bet' || gameState === 'resolving') ? (
                 <>
                     <span className="text-white font-bold mr-4 select-none">

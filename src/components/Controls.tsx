@@ -11,10 +11,10 @@ export const Controls: React.FC = () => {
     const canDouble = currentHand.cards.length === 2 && balance >= currentHand.bet;
 
     return (
-        <div className="flex gap-6 mt-8">
+        <div className="flex gap-2 sm:gap-6 mt-0 sm:mt-8 scale-90 sm:scale-100 origin-bottom">
             <button
                 onClick={hit}
-                className="group relative px-8 py-3 rounded-full font-black text-white tracking-wider overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_0_15px_rgba(72,187,120,0.5)] border-2 border-green-400/50"
+                className="group relative px-4 py-2 sm:px-8 sm:py-3 rounded-full font-black text-white tracking-wider overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_0_15px_rgba(72,187,120,0.5)] border-2 border-green-400/50 text-xs sm:text-base"
             >
                 <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-green-900 group-hover:from-green-400 group-hover:to-green-800 transition-colors" />
                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay" />
@@ -24,7 +24,7 @@ export const Controls: React.FC = () => {
 
             <button
                 onClick={stand}
-                className="group relative px-8 py-3 rounded-full font-black text-white tracking-wider overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_0_15px_rgba(245,101,101,0.5)] border-2 border-red-400/50"
+                className="group relative px-4 py-2 sm:px-8 sm:py-3 rounded-full font-black text-white tracking-wider overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_0_15px_rgba(245,101,101,0.5)] border-2 border-red-400/50 text-xs sm:text-base"
             >
                 <div className="absolute inset-0 bg-gradient-to-br from-red-500 to-red-900 group-hover:from-red-400 group-hover:to-red-800 transition-colors" />
                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay" />
@@ -35,7 +35,7 @@ export const Controls: React.FC = () => {
             <button
                 onClick={double}
                 disabled={!canDouble}
-                className={`group relative px-8 py-3 rounded-full font-black tracking-wider overflow-hidden transition-all border-2
+                className={`group relative px-4 py-2 sm:px-8 sm:py-3 rounded-full font-black tracking-wider overflow-hidden transition-all border-2 text-xs sm:text-base
                     ${canDouble
                         ? 'text-white hover:scale-105 active:scale-95 shadow-[0_0_15px_rgba(236,201,75,0.5)] border-yellow-400/50 cursor-pointer'
                         : 'text-gray-400 border-gray-600 cursor-not-allowed opacity-40'}
@@ -50,7 +50,8 @@ export const Controls: React.FC = () => {
             <button
                 onClick={split}
                 disabled={!canSplit}
-                className={`group relative px-8 py-3 rounded-full font-black tracking-wider overflow-hidden transition-all border-2
+                style={{ display: canSplit ? 'block' : 'none' }} // Hide on mobile if not usable to save space? Prefer keeping layout stable but can hide.
+                className={`group relative px-4 py-2 sm:px-8 sm:py-3 rounded-full font-black tracking-wider overflow-hidden transition-all border-2 text-xs sm:text-base
                     ${canSplit
                         ? 'text-white hover:scale-105 active:scale-95 shadow-[0_0_15px_rgba(66,153,225,0.5)] border-blue-400/50 cursor-pointer'
                         : 'text-gray-400 border-gray-600 cursor-not-allowed opacity-40'}
