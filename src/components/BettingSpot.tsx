@@ -10,7 +10,7 @@ export const BettingSpot: React.FC = () => {
     return (
         <div className="relative flex justify-center items-center">
             {/* Printed Felt Marking */}
-            <div className="w-28 h-28 rounded-full border-4 border-gold-400/30 flex items-center justify-center relative select-none">
+            <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-full border-4 border-gold-400/30 flex items-center justify-center relative select-none">
                 <div className="absolute inset-0 rounded-full border border-gold-400/10 scale-90" />
 
                 {currentBet > 0 && (
@@ -22,9 +22,9 @@ export const BettingSpot: React.FC = () => {
                     >
                         {/* Stack of Chips representation (visual abstraction) */}
                         <div className="relative">
-                            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-gold-500 to-gold-700 border-4 border-dashed border-white shadow-2xl flex items-center justify-center text-black font-black font-serif text-lg">
+                            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-gold-500 to-gold-700 border-4 border-dashed border-white shadow-2xl flex items-center justify-center text-black font-black font-serif text-sm sm:text-lg">
                                 {/* Inner Inlay */}
-                                <div className="w-11 h-11 bg-white/90 rounded-full flex items-center justify-center shadow-inner text-sm">
+                                <div className="w-8 h-8 sm:w-11 sm:h-11 bg-white/90 rounded-full flex items-center justify-center shadow-inner text-[10px] sm:text-sm">
                                     ${currentBet}
                                 </div>
                             </div>
