@@ -7,7 +7,7 @@ interface ChipProps {
 }
 
 export const Chip: React.FC<ChipProps> = ({ value }) => {
-    const { placeBet } = useGameStore();
+    const { placeBet, placeSideBet } = useGameStore();
 
     const getColor = (val: number) => {
         switch (val) {
@@ -27,10 +27,24 @@ export const Chip: React.FC<ChipProps> = ({ value }) => {
             whileHover={{ scale: 1.1, y: -5 }}
             dragElastic={0.2}
             onDragEnd={(_, info) => {
-                if (info.offset.y < -100) {
+                const element = document.elementFromPoint(info.point.x, info.point.y);
+                const target = element?.closest('[data-bet-target]');
+
+                if (target) {
+                    const type = target.getAttribute('data-bet-target');
+                    if (type === 'main') placeBet(value);
+                    else if (type === 'poker3') placeSideBet('poker3', value);
+                    else if (type === 'perfectPairs') placeSideBet('perfectPairs', value);
+                } else if (info.offset.y < -100) {
+                    // Legacy: Drag up to place main bet if missed target but dragged far enough
                     placeBet(value);
                 }
             }}
+            // onClick handler removed/simplified to drag-focused, or keep click for main bet?
+            // Let's keep generic click for Main Bet for accessibility/ease?
+            // Actually user might want to click to side bet? No, click is ambiguous now.
+            // Let's rely on drag for precision, or maybe Click = Main Bet Default.
+            onClick={() => placeBet(value)}
             className={`
         w-12 h-12 sm:w-16 sm:h-16 rounded-full border-[4px] sm:border-[6px] shadow-[0_6px_10px_rgba(0,0,0,0.5),inset_0_-4px_4px_rgba(0,0,0,0.3)] 
         flex items-center justify-center

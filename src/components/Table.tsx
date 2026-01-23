@@ -6,6 +6,7 @@ import { ChipRack } from './ChipRack';
 import { BettingSpot } from './BettingSpot';
 import { StatsModal } from './StatsModal';
 import { OutcomeOverlay } from './OutcomeOverlay';
+import { GameOverModal } from './GameOverModal';
 
 export const Table: React.FC = () => {
     const { message, balance, resetMessage } = useGameStore();
@@ -21,6 +22,7 @@ export const Table: React.FC = () => {
         <div className="relative w-screen h-screen bg-black flex items-center justify-center overflow-hidden">
             {/* Table Rail (Wood Texture) */}
             <div className="relative w-screen h-screen sm:w-[95vw] sm:h-[90vh] wood-texture sm:rounded-[60px] md:rounded-[100px] shadow-2xl flex items-center justify-center border-[4px] sm:border-[12px] border-[#291b16]">
+                <GameOverModal />
 
                 {/* Felt Surface */}
                 <div className="relative w-full h-full bg-felt-base sm:rounded-[40px] md:rounded-[60px] shadow-inner overflow-hidden border-2 sm:border-4 border-black/30 flex flex-col">

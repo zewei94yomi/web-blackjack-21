@@ -2,7 +2,7 @@ import { Deck } from './Deck';
 import { Hand } from './Hand';
 import { audioManager } from '../utils/audio';
 
-export type GameState = 'waiting-bet' | 'dealing' | 'player-turn' | 'dealer-turn' | 'resolving';
+export type GameState = 'waiting-bet' | 'dealing' | 'playing' | 'player-turn' | 'dealer-turn' | 'resolving';
 
 export interface GameStateListener {
     onStateChange(state: GameState): void;
@@ -81,8 +81,36 @@ export class BlackjackEngine {
             }
         }
 
-        this.state = 'player-turn';
-        this.notifyUpdate("Your turn.");
+        if (this.playerHands[0].isBlackjack) {
+            if (this.dealerHand.cards[0].value >= 10 || this.dealerHand.cards[0].rank === 'A') {
+                // Dealer peek logic would go here
+            } else {
+                // Instant win
+                this.state = 'resolving';
+                this.notifyUpdate("Blackjack!");
+                return;
+            }
+        }
+
+        // Hook point for Side Bets: State transition 'playing'
+        // This allows the store to see the cards and resolve side bets before player turn action.
+        this.state = 'playing';
+        this.notifyUpdate("Side Bets...");
+
+        // Immediate transition to player turn? 
+        // We can wait a microsecond or let the Store 'Hit' logic take over?
+        // Actually Store just listening to 'playing' state is enough to resolve side bets.
+        // But we need to move to 'player-turn' so buttons appear.
+        // We can do this via a timeout or let the store call `engine.nextTurn()`? 
+        // Simplest: Auto-transition after a short delay in Engine or call from Store after resolution.
+        // Let's make the engine wait slightly then move to player-turn.
+
+        setTimeout(() => {
+            if (this.state === 'playing') { // Check if not resolved (e.g. blackjack)
+                this.state = 'player-turn';
+                this.notifyUpdate("Your turn.");
+            }
+        }, 1500); // 1.5s delay to show side bet outcome
     }
 
     hit() {
