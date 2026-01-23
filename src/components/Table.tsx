@@ -45,6 +45,28 @@ export const Table: React.FC = () => {
                         </div>
                     </div>
 
+                    {/* 21+3 Side Bet Rules - Left Side */}
+                    <div className="hidden sm:block absolute left-4 md:left-8 top-1/2 -translate-y-1/2 pointer-events-none select-none opacity-30">
+                        <div className="text-gold-400 text-xs font-bold uppercase tracking-widest mb-2 text-center">21+3</div>
+                        <div className="text-[9px] text-gold-200/80 space-y-0.5 font-mono">
+                            <div className="flex justify-between gap-4"><span>Flush</span><span>5:1</span></div>
+                            <div className="flex justify-between gap-4"><span>Straight</span><span>10:1</span></div>
+                            <div className="flex justify-between gap-4"><span>3 of Kind</span><span>30:1</span></div>
+                            <div className="flex justify-between gap-4"><span>Str Flush</span><span>40:1</span></div>
+                            <div className="flex justify-between gap-4"><span>Suited 3</span><span>100:1</span></div>
+                        </div>
+                    </div>
+
+                    {/* Perfect Pairs Rules - Right Side */}
+                    <div className="hidden sm:block absolute right-4 md:right-8 top-1/2 -translate-y-1/2 pointer-events-none select-none opacity-30">
+                        <div className="text-gold-400 text-xs font-bold uppercase tracking-widest mb-2 text-center">Perfect Pairs</div>
+                        <div className="text-[9px] text-gold-200/80 space-y-0.5 font-mono">
+                            <div className="flex justify-between gap-4"><span>Mixed Pair</span><span>5:1</span></div>
+                            <div className="flex justify-between gap-4"><span>Colored</span><span>12:1</span></div>
+                            <div className="flex justify-between gap-4"><span>Perfect</span><span>25:1</span></div>
+                        </div>
+                    </div>
+
                     {/* Header / HUD */}
                     <div className="relative w-full p-2 sm:p-6 flex justify-between items-start z-10 pointer-events-none shrink-0">
                         <div className="bg-black/40 backdrop-blur-md rounded-lg sm:rounded-xl px-3 py-1.5 sm:px-4 sm:py-2 border border-white/5">
