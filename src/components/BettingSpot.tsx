@@ -73,6 +73,22 @@ export const BettingSpot: React.FC = () => {
                         Place Bet
                     </span>
                 )}
+
+                {/* Deal Button Overlay */}
+                {currentBet > 0 && gameState === 'waiting-bet' && (
+                    <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="absolute z-20"
+                    >
+                        <button
+                            onClick={() => useGameStore.getState().deal()}
+                            className="bg-gold-500 hover:bg-gold-400 text-black font-black uppercase tracking-widest text-[10px] sm:text-xs px-3 py-1 sm:px-4 sm:py-2 rounded-full shadow-[0_0_15px_rgba(255,215,0,0.6)] animate-pulse hover:animate-none active:scale-95 transition-all border-2 border-white/20"
+                        >
+                            DEAL
+                        </button>
+                    </motion.div>
+                )}
             </div>
 
             {/* Perfect Pairs Side Bet Target */}

@@ -27,8 +27,8 @@ export const Chip: React.FC<ChipProps> = ({ value }) => {
             whileHover={{ scale: 1.1, y: -5 }}
             dragElastic={0.2}
             onDragEnd={(_, info) => {
-                const element = document.elementFromPoint(info.point.x, info.point.y);
-                const target = element?.closest('[data-bet-target]');
+                const elements = document.elementsFromPoint(info.point.x, info.point.y);
+                const target = elements.find(el => el.hasAttribute('data-bet-target'));
 
                 if (target) {
                     const type = target.getAttribute('data-bet-target');
@@ -36,14 +36,10 @@ export const Chip: React.FC<ChipProps> = ({ value }) => {
                     else if (type === 'poker3') placeSideBet('poker3', value);
                     else if (type === 'perfectPairs') placeSideBet('perfectPairs', value);
                 } else if (info.offset.y < -100) {
-                    // Legacy: Drag up to place main bet if missed target but dragged far enough
+                    // Legacy: Only drag to main bet if NO explicit target was found
                     placeBet(value);
                 }
             }}
-            // onClick handler removed/simplified to drag-focused, or keep click for main bet?
-            // Let's keep generic click for Main Bet for accessibility/ease?
-            // Actually user might want to click to side bet? No, click is ambiguous now.
-            // Let's rely on drag for precision, or maybe Click = Main Bet Default.
             onClick={() => placeBet(value)}
             className={`
         w-12 h-12 sm:w-16 sm:h-16 rounded-full border-[4px] sm:border-[6px] shadow-[0_6px_10px_rgba(0,0,0,0.5),inset_0_-4px_4px_rgba(0,0,0,0.3)] 
@@ -56,13 +52,13 @@ export const Chip: React.FC<ChipProps> = ({ value }) => {
       `}
         >
             {/* Inner Ring (Inlay contrast) */}
-            <div className="absolute inset-0 rounded-full border-[8px] border-white/10 border-dashed animate-spin-slow pointer-events-none" style={{ animationDuration: '20s' }} />
+            < div className="absolute inset-0 rounded-full border-[8px] border-white/10 border-dashed animate-spin-slow pointer-events-none" style={{ animationDuration: '20s' }} />
 
-            <div className="w-11 h-11 rounded-full bg-white/90 shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)] flex items-center justify-center border border-gray-300 relative z-10">
+            < div className="w-11 h-11 rounded-full bg-white/90 shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)] flex items-center justify-center border border-gray-300 relative z-10" >
                 <div className="w-9 h-9 rounded-full border border-black/10 flex items-center justify-center bg-transparent">
                     <span className="drop-shadow-sm text-black font-black text-xs font-serif tracking-tight">${value}</span>
                 </div>
-            </div>
-        </motion.div>
+            </div >
+        </motion.div >
     );
 };

@@ -40,17 +40,41 @@ export class BlackjackEngine {
     }
 
     placeBet(amount: number) {
+        // Just sets up internal state, does NOT start round
         if (this.state !== 'waiting-bet' && this.state !== 'resolving') return;
         if (amount <= 0) return;
 
-        this.playerHands = [new Hand(amount)];
-        this.dealerHand = new Hand();
-        this.currentHandIndex = 0;
+        // If simple overwrite or accumulate? 
+        // Logic: placeBet creates a new hand setup. 
+        // If we want to accumulate, we should check structure.
+        // For now, assuming UI sums it up or we overwrite. 
+        // Let's make it overwriting for initial setup for simplicity, OR
+        // better: just update the bet value of the first hand.
 
-        this.startRound();
+        if (this.playerHands.length === 0 || this.state === 'resolving') {
+            this.playerHands = [new Hand(amount)];
+            this.dealerHand = new Hand();
+            this.currentHandIndex = 0;
+            this.state = 'waiting-bet'; // Reset to waiting if it was resolving
+        } else {
+            // Add to existing
+            this.playerHands[0].bet += amount;
+        }
+
+        this.notifyUpdate();
     }
 
-    async startRound() {
+    startRound() {
+        if (this.playerHands[0].bet <= 0) return;
+
+        this.state = 'dealing';
+        // ... rest of logic
+        // We need to move the rest of startRound here and genericize.
+
+        this._dealInitialCards();
+    }
+
+    private async _dealInitialCards() {
         this.state = 'dealing';
 
         // Check shuffle needed

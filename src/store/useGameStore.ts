@@ -41,6 +41,7 @@ interface GameStore {
     initGame: () => void;
     placeBet: (amount: number) => void;
     placeSideBet: (type: 'perfectPairs' | 'poker3', amount: number) => void;
+    deal: () => void;
     hit: () => void;
     stand: () => void;
     double: () => void;
@@ -125,6 +126,19 @@ export const useGameStore = create<GameStore>((set, get) => {
                 sideBets: newSideBets
             });
             import('../utils/audio').then(m => m.audioManager.playBetSound());
+        },
+
+        deal: () => {
+            const { playerHands } = get();
+            const engine = get().engine; // Access engine from store state or closure? Closure 'engine' is available.
+
+            // Check if main bet exists (MVP: hand[0].bet > 0)
+            if (!playerHands[0] || playerHands[0].bet <= 0) {
+                set({ message: "Place a bet first!" });
+                return;
+            }
+            // Start engine
+            engine.startRound();
         },
 
         hit: () => engine.hit(),
