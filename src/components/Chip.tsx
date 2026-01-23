@@ -8,6 +8,7 @@ interface ChipProps {
 
 export const Chip: React.FC<ChipProps> = ({ value }) => {
     const { placeBet, placeSideBet } = useGameStore();
+    const isDragging = React.useRef(false);
 
     const getColor = (val: number) => {
         switch (val) {
@@ -26,6 +27,7 @@ export const Chip: React.FC<ChipProps> = ({ value }) => {
             whileDrag={{ scale: 1.2, zIndex: 100, rotate: 10 }}
             whileHover={{ scale: 1.1, y: -5 }}
             dragElastic={0.2}
+            onDragStart={() => { isDragging.current = true; }}
             onDragEnd={(_, info) => {
                 const elements = document.elementsFromPoint(info.point.x, info.point.y);
                 const target = elements.find(el => el.hasAttribute('data-bet-target'));
@@ -39,8 +41,16 @@ export const Chip: React.FC<ChipProps> = ({ value }) => {
                     // Legacy: Only drag to main bet if NO explicit target was found
                     placeBet(value);
                 }
+
+                // Delay resetting to prevent onClick from firing
+                setTimeout(() => { isDragging.current = false; }, 50);
             }}
-            onClick={() => placeBet(value)}
+            onClick={() => {
+                // Only place main bet if we didn't just drag
+                if (!isDragging.current) {
+                    placeBet(value);
+                }
+            }}
             className={`
         w-12 h-12 sm:w-16 sm:h-16 rounded-full border-[4px] sm:border-[6px] shadow-[0_6px_10px_rgba(0,0,0,0.5),inset_0_-4px_4px_rgba(0,0,0,0.3)] 
         flex items-center justify-center
