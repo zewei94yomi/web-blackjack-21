@@ -41,6 +41,7 @@ interface GameStore {
     initGame: () => void;
     placeBet: (amount: number) => void;
     placeSideBet: (type: 'perfectPairs' | 'poker3', amount: number) => void;
+    clearBets: () => void;
     deal: () => void;
     hit: () => void;
     stand: () => void;
@@ -110,10 +111,16 @@ export const useGameStore = create<GameStore>((set, get) => {
         },
 
         placeSideBet: (type, amount) => {
-            const { balance, gameState, sideBets } = get();
+            const { balance, gameState, sideBets, playerHands } = get();
 
             // Can only bet during waiting phase
             if (gameState !== 'waiting-bet') return;
+
+            // Must place main bet first!
+            if (!playerHands[0] || playerHands[0].bet <= 0) {
+                set({ message: "Place main bet first!" });
+                return;
+            }
 
             if (amount > balance) {
                 set({ message: "Insufficient funds for Side Bet!" });
@@ -128,9 +135,33 @@ export const useGameStore = create<GameStore>((set, get) => {
             import('../utils/audio').then(m => m.audioManager.playBetSound());
         },
 
+        clearBets: () => {
+            const { playerHands, sideBets, gameState, balance } = get();
+
+            // Only allow clearing during betting phase
+            if (gameState !== 'waiting-bet') return;
+
+            // Calculate total bet to refund
+            const mainBet = playerHands[0]?.bet || 0;
+            const sideBetTotal = sideBets.perfectPairs + sideBets.poker3;
+            const refund = mainBet + sideBetTotal;
+
+            if (refund === 0) return; // Nothing to clear
+
+            // Reset bets and refund balance
+            const engine = get().engine;
+            engine.placeBet(0); // Reset engine bet state (or we can just reset playerHands)
+
+            set({
+                balance: balance + refund,
+                sideBets: { perfectPairs: 0, poker3: 0 },
+                message: `Bets cleared (+$${refund})`
+            });
+        },
+
         deal: () => {
             const { playerHands } = get();
-            const engine = get().engine; // Access engine from store state or closure? Closure 'engine' is available.
+            const engine = get().engine;
 
             // Check if main bet exists (MVP: hand[0].bet > 0)
             if (!playerHands[0] || playerHands[0].bet <= 0) {
