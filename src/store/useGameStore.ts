@@ -148,13 +148,17 @@ export const useGameStore = create<GameStore>((set, get) => {
 
             if (refund === 0) return; // Nothing to clear
 
-            // Reset bets and refund balance
+            // Reset engine state - create fresh Hand with 0 bet
             const engine = get().engine;
-            engine.placeBet(0); // Reset engine bet state (or we can just reset playerHands)
+            engine.playerHands = [new Hand(0)];
+            engine.dealerHand = new Hand();
 
+            // Update store state - IMPORTANT: also update playerHands reference from engine
             set({
                 balance: balance + refund,
                 sideBets: { perfectPairs: 0, poker3: 0 },
+                playerHands: engine.playerHands, // Sync with engine
+                dealerHand: engine.dealerHand,
                 message: `Bets cleared (+$${refund})`
             });
         },
