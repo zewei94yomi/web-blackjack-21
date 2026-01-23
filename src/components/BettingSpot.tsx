@@ -78,19 +78,20 @@ export const BettingSpot: React.FC = () => {
             {/* Action Buttons - positioned below the betting area */}
             {currentBet > 0 && gameState === 'waiting-bet' && (
                 <motion.div
-                    initial={{ scale: 0, y: 10 }}
-                    animate={{ scale: 1, y: 0 }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.15 }}
                     className="absolute -bottom-12 sm:-bottom-16 left-1/2 -translate-x-1/2 z-20 flex gap-2"
                 >
                     <button
                         onClick={() => useGameStore.getState().clearBets()}
-                        className="bg-gray-700 hover:bg-gray-600 text-white font-bold uppercase tracking-wider text-[10px] sm:text-xs px-3 py-2 sm:px-4 sm:py-2 rounded-full shadow-lg active:scale-95 transition-all border border-white/20"
+                        className="bg-gray-700 hover:bg-gray-600 text-white font-bold uppercase tracking-wider text-[10px] sm:text-xs px-3 py-2 sm:px-4 sm:py-2 rounded-full shadow-lg active:scale-95 transition-colors border border-white/20"
                     >
                         CLEAR
                     </button>
                     <button
                         onClick={() => useGameStore.getState().deal()}
-                        className="bg-gradient-to-r from-gold-600 to-gold-400 hover:from-gold-500 hover:to-gold-300 text-black font-black uppercase tracking-widest text-xs sm:text-sm px-6 py-2 sm:px-8 sm:py-2 rounded-full shadow-[0_0_20px_rgba(255,215,0,0.6)] animate-pulse hover:animate-none active:scale-95 transition-all border-2 border-white/30"
+                        className="bg-gradient-to-r from-gold-600 to-gold-400 hover:from-gold-500 hover:to-gold-300 text-black font-black uppercase tracking-widest text-xs sm:text-sm px-6 py-2 sm:px-8 sm:py-2 rounded-full shadow-[0_0_20px_rgba(255,215,0,0.6)] active:scale-95 transition-colors border-2 border-white/30"
                     >
                         DEAL
                     </button>
