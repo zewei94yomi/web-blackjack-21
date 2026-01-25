@@ -21,9 +21,9 @@ export const ChipRack: React.FC = () => {
     }
 
     return (
-        <div className="relative flex items-center h-12 sm:h-16">
-            {/* Status Tooltip (Absolute to avoid pushing layout) */}
-            <div className="absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap pointer-events-none">
+        <div className="relative flex items-center justify-center h-12 sm:h-16 w-[180px] sm:w-[280px]">
+            {/* Status Tooltip (Pinned relative to the rack) */}
+            <div className="absolute -top-6 sm:-top-8 left-0 sm:left-auto sm:right-0 whitespace-nowrap pointer-events-none">
                 {gameState === 'waiting-bet' && (
                     <div className="text-gold-400/80 text-[10px] sm:text-xs font-bold uppercase tracking-widest animate-pulse">
                         Place Your Bet
@@ -36,13 +36,13 @@ export const ChipRack: React.FC = () => {
                 )}
             </div>
 
-            <div className="flex gap-2 sm:gap-4 items-center bg-black/40 backdrop-blur-sm rounded-full px-2 sm:px-4 py-1 border border-white/5">
+            <div className="flex gap-2 sm:gap-4 items-center bg-black/40 backdrop-blur-sm rounded-full px-2 sm:px-4 py-1 border border-white/10 ring-1 ring-white/5">
                 {(gameState === 'waiting-bet' || gameState === 'resolving') ? (
                     chips.map(val => (
                         <Chip key={val} value={val} />
                     ))
                 ) : (
-                    <div className="px-4 text-white/30 italic text-xs sm:text-sm font-medium tracking-wide">
+                    <div className="px-4 text-white/30 italic text-[10px] sm:text-sm font-medium tracking-wide whitespace-nowrap">
                         Game in progress...
                     </div>
                 )}

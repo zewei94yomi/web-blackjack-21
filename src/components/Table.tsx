@@ -161,31 +161,35 @@ export const Table: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Bottom Section: Chip Rack & Balance */}
-                    <div className="shrink-0 pb-4 sm:pb-8 px-6 sm:px-12 z-20 flex flex-col sm:flex-row items-center justify-center sm:justify-end gap-6 sm:gap-10 w-full mb-2">
+                    {/* Absolute Pinned UI Elements */}
 
+                    {/* Bottom-Right: Chips & Balance */}
+                    <div className="absolute bottom-6 sm:bottom-10 right-6 sm:right-12 z-30 flex items-center gap-6 sm:gap-8">
                         {/* Balance Display */}
-                        <div className="relative group perspective-1000 order-2 sm:order-1 min-w-[140px] sm:min-w-[180px]">
-                            <div className="relative bg-gradient-to-b from-gray-900 to-black border border-gold-600/30 rounded-full px-4 sm:px-8 py-2 sm:py-3 shadow-2xl flex items-center justify-center gap-3 sm:gap-4 transition-all hover:border-gold-500/50">
-                                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-gold-400 to-gold-600 shadow-inner flex items-center justify-center text-black font-serif font-bold text-base sm:text-xl border border-gold-300">$</div>
-                                <span className="text-xl sm:text-3xl font-mono font-black text-gold-100 tracking-wider">
+                        <div className="relative group perspective-1000 min-w-[140px] sm:min-w-[180px]">
+                            <div className="relative bg-gradient-to-b from-gray-900 to-black border border-gold-600/30 rounded-full px-4 sm:px-8 py-1.5 sm:py-2.5 shadow-2xl flex items-center justify-center gap-2 sm:gap-4 transition-all hover:border-gold-500/50">
+                                <div className="w-6 h-6 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-gold-400 to-gold-600 shadow-inner flex items-center justify-center text-black font-serif font-bold text-sm sm:text-xl border border-gold-300 transform group-hover:rotate-12 transition-transform">$</div>
+                                <span className="text-lg sm:text-3xl font-mono font-black text-gold-100 tracking-wider">
                                     {balance.toLocaleString()}
                                 </span>
                             </div>
                         </div>
 
                         {/* Chip Rack */}
-                        <div className="order-1 sm:order-2 flex justify-center sm:justify-end">
+                        <div className="flex items-center justify-center pointer-events-auto">
                             <ChipRack />
                         </div>
                     </div>
 
-                    {/* Stats/History Toggle */}
-                    <div className="absolute bottom-4 left-4 z-20 hidden sm:block">
-                        <div className="bg-black/60 backdrop-blur-md rounded-lg p-4 border border-white/10 w-64 text-xs font-mono text-gold-100/70 max-h-48 overflow-y-auto shadow-xl">
-                            <div className="font-bold text-gold-500 border-b border-white/10 mb-2 pb-1 sticky top-0 bg-transparent">SESSION LOG</div>
+                    {/* Bottom-Left: Session Log */}
+                    <div className="absolute bottom-6 sm:bottom-10 left-6 sm:left-12 z-30 hidden sm:block">
+                        <div className="bg-black/60 backdrop-blur-md rounded-xl p-4 border border-white/10 w-64 text-xs font-mono text-gold-100/70 max-h-48 overflow-y-auto shadow-2xl ring-1 ring-white/5">
+                            <div className="font-bold text-gold-500 border-b border-white/10 mb-2 pb-1 sticky top-0 bg-transparent flex items-center gap-2">
+                                <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
+                                SESSION LOG
+                            </div>
                             {useGameStore(s => s.history).map((entry, i) => (
-                                <div key={i} className="mb-1 leading-tight border-b border-white/5 pb-1 last:border-0 border-dashed">
+                                <div key={i} className="mb-1.5 leading-tight border-b border-white/5 pb-1 last:border-0 border-dashed hover:text-white transition-colors">
                                     {entry}
                                 </div>
                             ))}
