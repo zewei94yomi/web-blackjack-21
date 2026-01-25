@@ -162,19 +162,20 @@ export const Table: React.FC = () => {
                     </div>
 
                     {/* Bottom Section: Chip Rack & Balance */}
-                    <div className="shrink-0 pb-4 sm:pb-6 px-4 sm:px-6 z-20 flex flex-col sm:flex-row items-center justify-center sm:justify-end gap-2 sm:gap-6 w-full">
+                    <div className="shrink-0 pb-4 sm:pb-8 px-6 sm:px-12 z-20 flex flex-col sm:flex-row items-center justify-center sm:justify-end gap-6 sm:gap-10 w-full mb-2">
 
-                        {/* Balance (Visible on both, styled appropriately) */}
-                        <div className="relative group perspective-1000 order-2 sm:order-1">
-                            <div className="relative bg-gradient-to-b from-gray-900 to-black border border-gold-600/30 rounded-full px-4 sm:px-6 py-1.5 sm:py-2 shadow-xl flex items-center gap-2 sm:gap-3">
-                                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-gold-400 to-gold-600 shadow-inner flex items-center justify-center text-black font-serif font-bold text-sm sm:text-lg border border-gold-300">$</div>
-                                <span className="text-lg sm:text-2xl font-mono font-bold text-gold-100 tracking-wider">
+                        {/* Balance Display */}
+                        <div className="relative group perspective-1000 order-2 sm:order-1 min-w-[140px] sm:min-w-[180px]">
+                            <div className="relative bg-gradient-to-b from-gray-900 to-black border border-gold-600/30 rounded-full px-4 sm:px-8 py-2 sm:py-3 shadow-2xl flex items-center justify-center gap-3 sm:gap-4 transition-all hover:border-gold-500/50">
+                                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-gold-400 to-gold-600 shadow-inner flex items-center justify-center text-black font-serif font-bold text-base sm:text-xl border border-gold-300">$</div>
+                                <span className="text-xl sm:text-3xl font-mono font-black text-gold-100 tracking-wider">
                                     {balance.toLocaleString()}
                                 </span>
                             </div>
                         </div>
 
-                        <div className="order-1 sm:order-2">
+                        {/* Chip Rack */}
+                        <div className="order-1 sm:order-2 flex justify-center sm:justify-end">
                             <ChipRack />
                         </div>
                     </div>
