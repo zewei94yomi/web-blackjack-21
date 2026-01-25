@@ -2,7 +2,7 @@ import { Deck } from './Deck';
 import { Hand } from './Hand';
 import { audioManager } from '../utils/audio';
 
-export type GameState = 'waiting-bet' | 'dealing' | 'playing' | 'player-turn' | 'dealer-turn' | 'resolving';
+export type GameState = 'waiting-bet' | 'dealing' | 'playing' | 'player-turn' | 'dealer-turn' | 'resolving' | 'offering-even-money';
 
 export interface GameStateListener {
     onStateChange(state: GameState): void;
@@ -92,11 +92,15 @@ export class BlackjackEngine {
 
         // Check instant Blackjack for Player
         if (this.playerHands[0].isBlackjack) {
-            // Check dealer blackjack
-            if (this.dealerHand.cards[0].value >= 10 || this.dealerHand.cards[0].rank === 'A') {
-                // Dealer might have BJ too, let resolve happen naturally or peek?
-                // Standard US rule: Dealer peeks if Upcard is A or 10.
-                // If Dealer has BJ, push or lose immediately.
+            // Check dealer potential blackjack
+            const dealerUpCard = this.dealerHand.cards[0];
+            const dealerHasTenOrAce = dealerUpCard.value >= 10 || dealerUpCard.rank === 'A';
+
+            if (dealerHasTenOrAce) {
+                // User requirement: Offer "Even Money" if Player BJ and Dealer shows A or 10
+                this.state = 'offering-even-money';
+                this.notifyUpdate("Even Money?");
+                return;
             } else {
                 // Instant win 3:2
                 this.state = 'resolving';
@@ -105,16 +109,6 @@ export class BlackjackEngine {
             }
         }
 
-        if (this.playerHands[0].isBlackjack) {
-            if (this.dealerHand.cards[0].value >= 10 || this.dealerHand.cards[0].rank === 'A') {
-                // Dealer peek logic would go here
-            } else {
-                // Instant win
-                this.state = 'resolving';
-                this.notifyUpdate("Blackjack!");
-                return;
-            }
-        }
 
         // Hook point for Side Bets: State transition 'playing'
         // This allows the store to see the cards and resolve side bets before player turn action.
@@ -174,6 +168,32 @@ export class BlackjackEngine {
         audioManager.playDealSound();
 
         this.finishCurrentHand();
+    }
+
+    takeEvenMoney() {
+        if (this.state !== 'offering-even-money') return;
+
+        // Even money pays 1:1 regardless of dealer hand
+        // We modify the hand to reflect a 1:1 payout in the final resolution
+        // or we just resolve it now.
+        this.state = 'resolving';
+        // Hack: temporarily set it to something getResults can handle or return custom
+        this.notifyUpdate("Even Money Accepted.");
+    }
+
+    declineEvenMoney() {
+        if (this.state !== 'offering-even-money') return;
+
+        // Continue to side bets then dealer turn
+        this.state = 'playing';
+        this.notifyUpdate("Side Bets...");
+
+        setTimeout(() => {
+            if (this.state === 'playing') {
+                this.state = 'player-turn';
+                this.notifyUpdate("Your turn.");
+            }
+        }, 1500);
     }
 
     split() {
@@ -290,8 +310,8 @@ export class BlackjackEngine {
                 profit = -hand.bet;
             } else if (hand.isBlackjack) {
                 if (dealerBJ) {
-                    result = 'push';
-                    profit = 0;
+                    result = 'lose'; // User requirement: Dealer wins on Tie
+                    profit = -hand.bet;
                 } else {
                     result = 'blackjack';
                     profit = hand.bet * 1.5;
@@ -311,8 +331,8 @@ export class BlackjackEngine {
                     result = 'lose';
                     profit = -hand.bet;
                 } else {
-                    result = 'push';
-                    profit = 0;
+                    result = 'lose'; // User requirement: Dealer wins on Tie
+                    profit = -hand.bet;
                 }
             }
             results.push({ handIndex: index, result, profit });

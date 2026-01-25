@@ -47,6 +47,8 @@ interface GameStore {
     stand: () => void;
     double: () => void;
     split: () => void;
+    takeEvenMoney: () => void;
+    declineEvenMoney: () => void;
     resetMessage: () => void;
     restartGame: () => void;
 }
@@ -200,6 +202,9 @@ export const useGameStore = create<GameStore>((set, get) => {
             engine.split();
         },
 
+        takeEvenMoney: () => engine.takeEvenMoney(),
+        declineEvenMoney: () => engine.declineEvenMoney(),
+
         resetMessage: () => set({ message: "" }),
 
         restartGame: () => {
@@ -310,7 +315,14 @@ useGameStore.setState((state) => {
                 results.forEach(res => {
                     const handBet = currentState.playerHands[res.handIndex].bet;
 
-                    if (res.result === 'win') {
+                    // special case for even money
+                    if (currentState.message === "Even Money Accepted.") {
+                        totalProfit += (handBet * 1) + handBet;
+                        netRoundChange += handBet;
+                        winMsg += "Even Money Collected. ";
+                        roundWins++;
+                        import('../utils/audio').then(m => m.audioManager.playWinSound());
+                    } else if (res.result === 'win') {
                         totalProfit += (handBet + res.profit);
                         netRoundChange += res.profit;
                         winMsg += `Hand ${res.handIndex + 1}: Win! `;
