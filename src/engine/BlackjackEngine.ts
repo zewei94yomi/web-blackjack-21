@@ -252,7 +252,10 @@ export class BlackjackEngine {
             const allBusted = this.playerHands.every(h => h.isBust);
             if (allBusted) {
                 this.notifyUpdate("Busted!");
-                await new Promise(r => setTimeout(r, 1000)); // Pause to let player see bust
+                await new Promise(r => setTimeout(r, 1200)); // Short pause to see bust
+                this.state = 'resolving';
+                this.notifyUpdate("Round Over.");
+                return;
             }
 
             this.state = 'dealer-turn';
