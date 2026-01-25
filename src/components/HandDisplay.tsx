@@ -59,8 +59,17 @@ export const HandDisplay: React.FC<HandDisplayProps> = ({ isDealer }) => {
                     >
                         {/* Result Badge */}
                         {badge && (
-                            <div className="absolute -top-6 z-20">
+                            <div className="absolute -top-7 z-20">
                                 {badge}
+                            </div>
+                        )}
+
+                        {/* Hand Bet Label */}
+                        {gameState !== 'waiting-bet' && (
+                            <div className="absolute -bottom-6 flex items-center justify-center z-10">
+                                <div className="bg-black/80 border border-gold-500/50 px-2 py-0.5 rounded-full shadow-lg">
+                                    <span className="text-[10px] font-bold text-gold-200">${hand.bet}</span>
+                                </div>
                             </div>
                         )}
 

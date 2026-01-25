@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 export const BettingSpot: React.FC = () => {
     const { playerHands, gameState, sideBets, sideBetOutcome } = useGameStore();
 
-    const currentBet = playerHands[0]?.bet || 0;
+    const totalBet = playerHands.reduce((sum, h) => sum + h.bet, 0);
 
     return (
         <div className="relative flex flex-col items-center gap-6 sm:gap-10">
@@ -47,29 +47,29 @@ export const BettingSpot: React.FC = () => {
                     w-20 h-20 sm:w-28 sm:h-28 
                     rounded-full border-4 flex items-center justify-center relative select-none
                     transition-all duration-300
-                    ${currentBet > 0 ? 'border-gold-500/50 bg-black/40' : 'border-gold-400/30'}
+                    ${totalBet > 0 ? 'border-gold-500/50 bg-black/40' : 'border-gold-400/30'}
                     `}
                 >
                     <div className="absolute inset-0 rounded-full border border-gold-400/10 scale-90" />
 
-                    {currentBet > 0 && (
+                    {totalBet > 0 && (
                         <motion.div
                             initial={{ scale: 0, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
-                            key={currentBet} // Re-animate on bet change
+                            key={totalBet} // Re-animate on bet change
                             className="flex flex-col items-center z-10"
                         >
                             <div className="relative">
                                 <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-gold-500 to-gold-700 border-4 border-dashed border-white shadow-2xl flex items-center justify-center text-black font-black font-serif text-sm sm:text-lg">
                                     <div className="w-8 h-8 sm:w-11 sm:h-11 bg-white/90 rounded-full flex items-center justify-center shadow-inner text-[10px] sm:text-sm">
-                                        ${currentBet}
+                                        ${totalBet}
                                     </div>
                                 </div>
                             </div>
                         </motion.div>
                     )}
 
-                    {currentBet === 0 && gameState === 'waiting-bet' && (
+                    {totalBet === 0 && gameState === 'waiting-bet' && (
                         <span className="text-white/20 text-xs sm:text-sm font-bold tracking-widest uppercase animate-pulse absolute pointer-events-none">
                             Place Bet
                         </span>
@@ -106,7 +106,7 @@ export const BettingSpot: React.FC = () => {
             </div>
 
             {/* Action Buttons Row - No longer absolute, part of flex flow */}
-            {currentBet > 0 && gameState === 'waiting-bet' && (
+            {totalBet > 0 && gameState === 'waiting-bet' && (
                 <div className="flex gap-4 items-center z-30 min-h-[40px] sm:min-h-[60px]">
                     <motion.button
                         initial={{ opacity: 0, y: 10 }}
