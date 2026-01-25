@@ -267,15 +267,8 @@ export class BlackjackEngine {
     private async playDealer() {
         this.notifyUpdate("Dealer's turn.");
 
-        // Check if all player hands busted. If so, dealer doesn't need to play (unless showing off).
-        const allBusted = this.playerHands.every(h => h.isBust);
-        if (allBusted) {
-            this.state = 'resolving';
-            this.notifyUpdate("Bust!");
-            return;
-        }
-
         // Dealer Flip (handled visually by revealing hidden card)
+        this.notifyUpdate();
 
         // Soft 17 Rule: Dealer stands on Soft 17? 
         // Doc: "Stand on Soft 17: 庄家软 17 点（A+6）时停牌"
