@@ -46,71 +46,71 @@ export const Table: React.FC = () => {
                     </div>
 
                     {/* 21+3 Side Bet Rules - Left Side */}
-                    <div className="hidden lg:block absolute left-[12%] md:left-[15%] top-1/2 -translate-y-1/2 pointer-events-none select-none opacity-30">
-                        <div className="text-gold-400 text-sm font-bold uppercase tracking-widest mb-3 text-center border-b border-gold-500/20 pb-1">21 + 3 Payouts</div>
-                        <div className="text-[10px] text-gold-200/80 space-y-1.5 font-mono min-w-[140px]">
+                    <div className="hidden lg:block absolute left-[8%] md:left-[10%] top-1/2 -translate-y-1/2 pointer-events-none select-none opacity-40">
+                        <div className="text-gold-400 text-2xl font-black uppercase tracking-[0.2em] mb-6 text-center border-b-2 border-gold-500/20 pb-3">21 + 3 Payouts</div>
+                        <div className="text-base text-gold-200/90 space-y-4 font-mono min-w-[280px]">
                             <div className="flex justify-between items-center group">
                                 <div className="flex flex-col">
-                                    <span className="font-bold text-gold-300">Flush</span>
-                                    <span className="text-[8px] opacity-60">3 same suit</span>
+                                    <span className="font-bold text-gold-300 text-lg">Flush</span>
+                                    <span className="text-xs opacity-60">3 same suit</span>
                                 </div>
-                                <span className="font-bold">5:1</span>
+                                <span className="font-black text-xl">5:1</span>
                             </div>
                             <div className="flex justify-between items-center">
                                 <div className="flex flex-col">
-                                    <span className="font-bold text-gold-300">Straight</span>
-                                    <span className="text-[8px] opacity-60">e.g. 5-6-7</span>
+                                    <span className="font-bold text-gold-300 text-lg">Straight</span>
+                                    <span className="text-xs opacity-60">e.g. 5-6-7</span>
                                 </div>
-                                <span className="font-bold">10:1</span>
+                                <span className="font-black text-xl">10:1</span>
                             </div>
                             <div className="flex justify-between items-center">
                                 <div className="flex flex-col">
-                                    <span className="font-bold text-gold-300">3 of a Kind</span>
-                                    <span className="text-[8px] opacity-60">e.g. Q-Q-Q</span>
+                                    <span className="font-bold text-gold-300 text-lg">3 of a Kind</span>
+                                    <span className="text-xs opacity-60">e.g. Q-Q-Q</span>
                                 </div>
-                                <span className="font-bold">30:1</span>
+                                <span className="font-black text-xl">30:1</span>
                             </div>
                             <div className="flex justify-between items-center">
                                 <div className="flex flex-col">
-                                    <span className="font-bold text-gold-300">Straight Flush</span>
-                                    <span className="text-[8px] opacity-60">Seq + Suit</span>
+                                    <span className="font-bold text-gold-300 text-lg">Straight Flush</span>
+                                    <span className="text-xs opacity-60">Seq + Suit</span>
                                 </div>
-                                <span className="font-bold">40:1</span>
+                                <span className="font-black text-xl">40:1</span>
                             </div>
                             <div className="flex justify-between items-center">
                                 <div className="flex flex-col">
-                                    <span className="font-bold text-gold-300">Suited Trips</span>
-                                    <span className="text-[8px] opacity-60">3 identical</span>
+                                    <span className="font-bold text-gold-300 text-lg">Suited Trips</span>
+                                    <span className="text-xs opacity-60">3 identical</span>
                                 </div>
-                                <span className="font-bold">100:1</span>
+                                <span className="font-black text-xl">100:1</span>
                             </div>
                         </div>
                     </div>
 
                     {/* Perfect Pairs Rules - Right Side */}
-                    <div className="hidden lg:block absolute right-[12%] md:right-[15%] top-1/2 -translate-y-1/2 pointer-events-none select-none opacity-30">
-                        <div className="text-gold-400 text-sm font-bold uppercase tracking-widest mb-3 text-center border-b border-gold-500/20 pb-1">Pair Payouts</div>
-                        <div className="text-[10px] text-gold-200/80 space-y-1.5 font-mono min-w-[140px]">
+                    <div className="hidden lg:block absolute right-[8%] md:right-[10%] top-1/2 -translate-y-1/2 pointer-events-none select-none opacity-40">
+                        <div className="text-gold-400 text-2xl font-black uppercase tracking-[0.2em] mb-6 text-center border-b-2 border-gold-500/20 pb-3">Pair Payouts</div>
+                        <div className="text-base text-gold-200/90 space-y-4 font-mono min-w-[280px]">
                             <div className="flex justify-between items-center">
                                 <div className="flex flex-col">
-                                    <span className="font-bold text-gold-300">Mixed Pair</span>
-                                    <span className="text-[8px] opacity-60">Red/Black</span>
+                                    <span className="font-bold text-gold-300 text-lg">Mixed Pair</span>
+                                    <span className="text-xs opacity-60">Red/Black</span>
                                 </div>
-                                <span className="font-bold">5:1</span>
+                                <span className="font-black text-xl">5:1</span>
                             </div>
                             <div className="flex justify-between items-center">
                                 <div className="flex flex-col">
-                                    <span className="font-bold text-gold-300">Colored Pair</span>
-                                    <span className="text-[8px] opacity-60">Same Color</span>
+                                    <span className="font-bold text-gold-300 text-lg">Colored Pair</span>
+                                    <span className="text-xs opacity-60">Same Color</span>
                                 </div>
-                                <span className="font-bold">12:1</span>
+                                <span className="font-black text-xl">12:1</span>
                             </div>
                             <div className="flex justify-between items-center">
                                 <div className="flex flex-col">
-                                    <span className="font-bold text-gold-300">Perfect Pair</span>
-                                    <span className="text-[8px] opacity-60">Identical</span>
+                                    <span className="font-bold text-gold-300 text-lg">Perfect Pair</span>
+                                    <span className="text-xs opacity-60">Identical</span>
                                 </div>
-                                <span className="font-bold">25:1</span>
+                                <span className="font-black text-xl">25:1</span>
                             </div>
                         </div>
                     </div>
