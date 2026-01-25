@@ -366,17 +366,26 @@ useGameStore.setState((state) => {
 
                 useGameStore.setState(s => ({
                     balance: newBalance,
-                    message: isGameOver ? "GAME OVER - Insufficient Funds" : (winMsg + (netRoundChange > 0 ? ` (+${netRoundChange})` : ` (${netRoundChange})`)),
+                    message: winMsg + (netRoundChange > 0 ? ` (+${netRoundChange})` : ` (${netRoundChange})`),
                     history: [`Round: ${winMsg} (${netRoundChange > 0 ? '+' : ''}${netRoundChange})`, ...s.history].slice(0, 50),
                     stats: newStats,
                     lastOutcome: results.some(r => r.result === 'blackjack') ? 'blackjack'
                         : results.some(r => r.result === 'win') ? 'win'
                             : results.every(r => r.result === 'push') ? 'push'
                                 : 'lose',
-                    isGameOver: isGameOver,
-                    sideBets: { perfectPairs: 0, poker3: 0 }, // Reset side bets for next round
+                    sideBets: { perfectPairs: 0, poker3: 0 },
                     sideBetOutcome: null
                 }));
+
+                // If game over, wait 2 seconds before showing modal
+                if (isGameOver) {
+                    setTimeout(() => {
+                        useGameStore.setState({
+                            isGameOver: true,
+                            message: "GAME OVER - Insufficient Funds"
+                        });
+                    }, 2000);
+                }
             }
         },
         onHandsUpdate: existingListener!.onHandsUpdate,

@@ -283,7 +283,7 @@ export class BlackjackEngine {
         }
 
         this.notifyUpdate("Dealer stands.");
-        await new Promise(r => setTimeout(r, 1200)); // Final pause before resolving
+        await new Promise(r => setTimeout(r, 1500)); // Final pause before resolving
 
         this.state = 'resolving';
         this.notifyUpdate("Round Over.");
