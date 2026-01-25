@@ -77,25 +77,34 @@ export const BettingSpot: React.FC = () => {
 
             {/* Action Buttons - positioned below the betting area */}
             {currentBet > 0 && gameState === 'waiting-bet' && (
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.15 }}
-                    className="absolute -bottom-12 sm:-bottom-16 left-1/2 -translate-x-1/2 z-20 flex gap-2"
-                >
-                    <button
-                        onClick={() => useGameStore.getState().clearBets()}
-                        className="bg-gray-700 hover:bg-gray-600 text-white font-bold uppercase tracking-wider text-[10px] sm:text-xs px-3 py-2 sm:px-4 sm:py-2 rounded-full shadow-lg active:scale-95 transition-colors border border-white/20"
+                <div className="absolute -bottom-14 sm:-bottom-20 left-1/2 -translate-x-1/2 z-30 flex gap-3 items-center">
+                    <motion.button
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        whileHover={{ scale: 1.05, backgroundColor: '#4b5563' }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            useGameStore.getState().clearBets();
+                        }}
+                        className="bg-gray-700 text-white font-bold uppercase tracking-wider text-[10px] sm:text-xs px-4 py-2 sm:px-6 sm:py-2.5 rounded-full shadow-xl border border-white/20 cursor-pointer pointer-events-auto"
                     >
                         CLEAR
-                    </button>
-                    <button
-                        onClick={() => useGameStore.getState().deal()}
-                        className="bg-gradient-to-r from-gold-600 to-gold-400 hover:from-gold-500 hover:to-gold-300 text-black font-black uppercase tracking-widest text-xs sm:text-sm px-6 py-2 sm:px-8 sm:py-2 rounded-full shadow-[0_0_20px_rgba(255,215,0,0.6)] active:scale-95 transition-colors border-2 border-white/30"
+                    </motion.button>
+                    <motion.button
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        whileHover={{ scale: 1.05, boxShadow: '0 0 25px rgba(255, 215, 0, 0.8)' }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            useGameStore.getState().deal();
+                        }}
+                        className="bg-gradient-to-r from-gold-600 to-gold-400 text-black font-black uppercase tracking-widest text-xs sm:text-sm px-8 py-2 sm:px-10 sm:py-3 rounded-full shadow-[0_0_20px_rgba(255,215,0,0.6)] border-2 border-white/40 cursor-pointer pointer-events-auto"
                     >
                         DEAL
-                    </button>
-                </motion.div>
+                    </motion.button>
+                </div>
             )}
 
             {/* Perfect Pairs Side Bet Target */}
