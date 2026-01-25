@@ -31,6 +31,15 @@ export class BlackjackEngine {
         this.listener = listener;
     }
 
+    reset() {
+        this.deck = new Deck(6);
+        this.dealerHand = new Hand();
+        this.playerHands = [new Hand()];
+        this.currentHandIndex = 0;
+        this.state = 'waiting-bet';
+        this.notifyUpdate();
+    }
+
     private notifyUpdate(msg: string = "") {
         if (this.listener) {
             this.listener.onStateChange(this.state);

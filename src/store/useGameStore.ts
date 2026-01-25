@@ -208,13 +208,18 @@ export const useGameStore = create<GameStore>((set, get) => {
         resetMessage: () => set({ message: "" }),
 
         restartGame: () => {
+            engine.reset();
             set({
                 balance: 10000,
                 isGameOver: false,
                 message: "Welcome back!",
                 history: [],
                 lastOutcome: null,
-                gameState: 'waiting-bet'
+                gameState: 'waiting-bet',
+                playerHands: engine.playerHands,
+                dealerHand: engine.dealerHand,
+                sideBets: { perfectPairs: 0, poker3: 0 },
+                sideBetOutcome: null
             });
         }
     };
