@@ -237,60 +237,53 @@ export class BlackjackEngine {
         }
     }
 
-    private finishCurrentHand() {
+    private async finishCurrentHand() {
         if (this.currentHandIndex < this.playerHands.length - 1) {
             this.currentHandIndex++;
 
-            // If the NEW hand is from a Split Ace, it needs its second card now?
-            // Or did we deal it at split time? 
-            // Simplified: We deal the second card when the hand becomes active.
             const currentHand = this.playerHands[this.currentHandIndex];
-            // If it only has 1 card (from split), deal one.
             if (currentHand.cards.length === 1) {
                 currentHand.addCard(this.deck.deal());
-                // If it was Split Ace, enforce rule: only 1 card.
-                if (currentHand.cards[0].rank === 'A') {
-                    // Auto stand after 1 card
-                    // But we need to update UI first?
-                    // Let's recursively finish if we want strict enforcement, or just let user see it.
-                }
             }
 
             this.notifyUpdate("Next hand.");
         } else {
             // All hands done
+            const allBusted = this.playerHands.every(h => h.isBust);
+            if (allBusted) {
+                this.notifyUpdate("Busted!");
+                await new Promise(r => setTimeout(r, 1000)); // Pause to let player see bust
+            }
+
             this.state = 'dealer-turn';
-            this.playDealer();
+            await this.playDealer();
         }
     }
 
     private async playDealer() {
-        this.notifyUpdate("Dealer's turn.");
+        this.notifyUpdate("Dealer's turn...");
+        await new Promise(r => setTimeout(r, 1000)); // Pause before revealing
 
         // Dealer Flip (handled visually by revealing hidden card)
-        this.notifyUpdate();
-
-        // Soft 17 Rule: Dealer stands on Soft 17? 
-        // Doc: "Stand on Soft 17: 庄家软 17 点（A+6）时停牌"
-        // So dealer hits if < 17. (Soft 17 is >= 17, so stand).
-        // Wait, "Stand on Soft 17": means if dealer has Soft 17, he stands.
-        // "Hit on Soft 17" is the other variant.
-        // So condition: while (val < 17). 
+        this.notifyUpdate("Revealing...");
+        await new Promise(r => setTimeout(r, 1000)); // Pause after revealing
 
         try {
             while (this.dealerHand.value < 17) {
-                await new Promise(r => setTimeout(r, 800)); // Delay for effect
                 if (this.deck.remainingCards === 0) {
-                    // Emergency shuffle if somehow empty
-                    this.deck.reset(); // reset() already shuffles
+                    this.deck.reset();
                 }
                 this.dealerHand.addCard(this.deck.deal());
-                this.notifyUpdate(); // Notify each card deal
+                audioManager.playDealSound();
+                this.notifyUpdate("Dealer hits...");
+                await new Promise(r => setTimeout(r, 800)); // Delay between hits
             }
         } catch (e) {
             console.error("Dealer loop error:", e);
-            this.notifyUpdate("Error: Dealer stopped.");
         }
+
+        this.notifyUpdate("Dealer stands.");
+        await new Promise(r => setTimeout(r, 1200)); // Final pause before resolving
 
         this.state = 'resolving';
         this.notifyUpdate("Round Over.");
