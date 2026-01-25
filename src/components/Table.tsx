@@ -146,7 +146,7 @@ export const Table: React.FC = () => {
                             {/* Betting Circle - Hide on small mobile to save space */}
                             <div className="hidden sm:block absolute top-0 left-1/2 -translate-x-1/2 w-[200px] sm:w-[300px] h-[100px] sm:h-[150px] border-2 border-white/5 rounded-[100%] pointer-events-none" />
 
-                            <div className="mb-2 sm:mb-6 z-10">
+                            <div className="mb-2 sm:mb-6 z-20">
                                 <BettingSpot />
                             </div>
 
