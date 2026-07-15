@@ -36,9 +36,11 @@ A professional-grade, high-fidelity Blackjack application built with **React 19*
 
 ## 🎮 Pro Rules
 - **6-Deck Shoe**: Standard casino randomization.
-- **Dealer Wins All Ties**: Increased house edge for a more challenging experience.
+- **Push on Ties**: Equal totals (and blackjack vs. blackjack) return the bet — standard casino rules.
+- **Split on Matching Ranks**: Only exact rank pairs (10-10, A-A) may be split.
 - **Table Limits**: $200 - $2,000 per hand.
 - **Dynamic Payouts**: Standard Win 1:1, Blackjack 3:2, Even Money 1:1.
+- **Progress Saved**: Balance, stats, and history persist in your browser via `localStorage`.
 
 ---
 

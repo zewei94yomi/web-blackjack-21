@@ -81,9 +81,9 @@ export class Hand {
 
     canSplit(): boolean {
         if (this.cards.length !== 2) return false;
-        // Standard rule: Split any pair of cards with same value (e.g. 10 and J) vs strictly same rank.
-        // "Split (分牌): 任意两张点数相同的牌可分" -> Value same check.
-        return this.cards[0].value === this.cards[1].value;
+        // House rule: only split an exact rank pair (10-10, A-A) — not merely
+        // equal value, so K-10 cannot be split. Matches the button gating in the UI.
+        return this.cards[0].rank === this.cards[1].rank;
     }
 
     canDouble(): boolean {

@@ -293,8 +293,8 @@ export class BlackjackEngine {
                 profit = -hand.bet;
             } else if (hand.isBlackjack) {
                 if (dealerBJ) {
-                    result = 'lose'; // User requirement: Dealer wins on Tie
-                    profit = -hand.bet;
+                    result = 'push'; // Blackjack vs blackjack is a standoff.
+                    profit = 0;
                 } else {
                     result = 'blackjack';
                     profit = hand.bet * 1.5;
@@ -314,8 +314,8 @@ export class BlackjackEngine {
                     result = 'lose';
                     profit = -hand.bet;
                 } else {
-                    result = 'lose'; // User requirement: Dealer wins on Tie
-                    profit = -hand.bet;
+                    result = 'push'; // Equal totals: standard casino push, bet returned.
+                    profit = 0;
                 }
             }
             results.push({ handIndex: index, result, profit });

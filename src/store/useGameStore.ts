@@ -4,6 +4,55 @@ import { Hand } from '../engine/Hand';
 import { audioManager } from '../utils/audio';
 import { evaluatePerfectPairs, evaluatePoker3 } from '../engine/SideBetRules';
 
+const STARTING_BALANCE = 10000;
+const MIN_BET = 200;
+const STORAGE_KEY = 'blackjack21:save:v1';
+
+type Stats = {
+    roundsSurvived: number;
+    peakBalance: number;
+    maxSingleRoundProfit: number;
+    wins: number;
+    losses: number;
+    pushes: number;
+};
+
+const freshStats = (): Stats => ({
+    roundsSurvived: 0,
+    peakBalance: STARTING_BALANCE,
+    maxSingleRoundProfit: 0,
+    wins: 0,
+    losses: 0,
+    pushes: 0,
+});
+
+type PersistedState = { balance: number; stats: Stats; history: string[] };
+
+// Only the durable progress is persisted — never the transient hand/round state.
+function loadPersisted(): PersistedState | null {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return null;
+        const data = JSON.parse(raw);
+        if (typeof data?.balance !== 'number') return null;
+        return {
+            balance: data.balance,
+            stats: { ...freshStats(), ...data.stats },
+            history: Array.isArray(data.history) ? data.history : [],
+        };
+    } catch {
+        return null; // Corrupt/unavailable storage: start fresh.
+    }
+}
+
+function savePersisted(p: PersistedState) {
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(p));
+    } catch {
+        /* storage full or blocked (private mode) — ignore */
+    }
+}
+
 interface GameStore {
     engine: BlackjackEngine;
 
@@ -68,29 +117,26 @@ export const useGameStore = create<GameStore>((set, get) => {
 
     engine.setListener(listener);
 
+    // Restore the player's saved progress (balance / stats / history) if present.
+    const saved = loadPersisted();
+    const startBalance = saved?.balance ?? STARTING_BALANCE;
+
     return {
         engine,
         gameState: 'waiting-bet',
         dealerHand: engine.dealerHand,
         playerHands: engine.playerHands,
         currentHandIndex: 0,
-        message: "Welcome to Blackjack 21",
-        balance: 10000, // Initial Balance
+        message: saved ? "Welcome back to Blackjack 21" : "Welcome to Blackjack 21",
+        balance: startBalance,
 
         sideBets: { perfectPairs: 0, poker3: 0 },
         sideBetOutcome: null,
-        stats: {
-            roundsSurvived: 0,
-            peakBalance: 10000,
-            maxSingleRoundProfit: 0,
-            wins: 0,
-            losses: 0,
-            pushes: 0
-        },
+        stats: saved?.stats ?? freshStats(),
 
-        history: [],
+        history: saved?.history ?? [],
         lastOutcome: null,
-        isGameOver: false,
+        isGameOver: startBalance < MIN_BET,
 
         initGame: () => {
             // Reserved for future setup; state is initialized inline above.
@@ -207,7 +253,7 @@ export const useGameStore = create<GameStore>((set, get) => {
         restartGame: () => {
             engine.reset();
             set({
-                balance: 10000,
+                balance: STARTING_BALANCE,
                 isGameOver: false,
                 message: "Welcome back!",
                 history: [],
@@ -218,14 +264,7 @@ export const useGameStore = create<GameStore>((set, get) => {
                 sideBets: { perfectPairs: 0, poker3: 0 },
                 sideBetOutcome: null,
                 // Fresh game means fresh stats.
-                stats: {
-                    roundsSurvived: 0,
-                    peakBalance: 10000,
-                    maxSingleRoundProfit: 0,
-                    wins: 0,
-                    losses: 0,
-                    pushes: 0
-                }
+                stats: freshStats()
             });
         }
     };
@@ -345,7 +384,7 @@ useGameStore.setState((state) => {
                 });
 
                 const newBalance = currentState.balance + totalProfit;
-                const isGameOver = newBalance < 200; // Minimum bet
+                const isGameOver = newBalance < MIN_BET;
 
                 // Update Stats
                 const newStats = {
@@ -386,4 +425,14 @@ useGameStore.setState((state) => {
         onMessage: existingListener!.onMessage
     });
     return state;
+});
+
+// Persist durable progress whenever it changes. Guarded by reference/value
+// checks so transient hand/message updates don't hit localStorage every frame.
+let lastSaved = { balance: NaN as number, stats: null as Stats | null, history: null as string[] | null };
+useGameStore.subscribe((s) => {
+    if (s.balance !== lastSaved.balance || s.stats !== lastSaved.stats || s.history !== lastSaved.history) {
+        lastSaved = { balance: s.balance, stats: s.stats, history: s.history };
+        savePersisted({ balance: s.balance, stats: s.stats, history: s.history });
+    }
 });
