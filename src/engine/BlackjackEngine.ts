@@ -17,6 +17,9 @@ export class BlackjackEngine {
     currentHandIndex: number;
     state: GameState;
 
+    /** True when the player accepted "Even Money" on a blackjack vs a dealer Ace. */
+    private evenMoneyTaken = false;
+
     private listener?: GameStateListener;
 
     constructor() {
@@ -37,6 +40,7 @@ export class BlackjackEngine {
         this.playerHands = [new Hand()];
         this.currentHandIndex = 0;
         this.state = 'waiting-bet';
+        this.evenMoneyTaken = false;
         this.notifyUpdate();
     }
 
@@ -49,24 +53,19 @@ export class BlackjackEngine {
     }
 
     placeBet(amount: number) {
-        // Just sets up internal state, does NOT start round
+        // Sets up the bet only; the round starts later via startRound().
         if (this.state !== 'waiting-bet' && this.state !== 'resolving') return;
         if (amount <= 0) return;
 
-        // If simple overwrite or accumulate? 
-        // Logic: placeBet creates a new hand setup. 
-        // If we want to accumulate, we should check structure.
-        // For now, assuming UI sums it up or we overwrite. 
-        // Let's make it overwriting for initial setup for simplicity, OR
-        // better: just update the bet value of the first hand.
-
         if (this.playerHands.length === 0 || this.state === 'resolving') {
+            // Starting a fresh round: clear the previous hands.
             this.playerHands = [new Hand(amount)];
             this.dealerHand = new Hand();
             this.currentHandIndex = 0;
-            this.state = 'waiting-bet'; // Reset to waiting if it was resolving
+            this.evenMoneyTaken = false;
+            this.state = 'waiting-bet';
         } else {
-            // Add to existing
+            // Same betting phase: accumulate onto the existing bet.
             this.playerHands[0].bet += amount;
         }
 
@@ -76,10 +75,8 @@ export class BlackjackEngine {
     startRound() {
         if (this.playerHands[0].bet <= 0) return;
 
+        this.evenMoneyTaken = false;
         this.state = 'dealing';
-        // ... rest of logic
-        // We need to move the rest of startRound here and genericize.
-
         this._dealInitialCards();
     }
 
@@ -119,25 +116,17 @@ export class BlackjackEngine {
         }
 
 
-        // Hook point for Side Bets: State transition 'playing'
-        // This allows the store to see the cards and resolve side bets before player turn action.
+        // Enter 'playing' so the store can resolve side bets against the opening
+        // cards, then hand control to the player after a short beat.
         this.state = 'playing';
         this.notifyUpdate("Side Bets...");
 
-        // Immediate transition to player turn? 
-        // We can wait a microsecond or let the Store 'Hit' logic take over?
-        // Actually Store just listening to 'playing' state is enough to resolve side bets.
-        // But we need to move to 'player-turn' so buttons appear.
-        // We can do this via a timeout or let the store call `engine.nextTurn()`? 
-        // Simplest: Auto-transition after a short delay in Engine or call from Store after resolution.
-        // Let's make the engine wait slightly then move to player-turn.
-
         setTimeout(() => {
-            if (this.state === 'playing') { // Check if not resolved (e.g. blackjack)
+            if (this.state === 'playing') { // Guard: may have already resolved.
                 this.state = 'player-turn';
                 this.notifyUpdate("Your turn.");
             }
-        }, 1500); // 1.5s delay to show side bet outcome
+        }, 1500); // Delay lets the side-bet outcome show.
     }
 
     hit() {
@@ -168,12 +157,9 @@ export class BlackjackEngine {
         const currentHand = this.playerHands[this.currentHandIndex];
         if (!currentHand.canDouble()) return; // Should be checked by UI too
 
-        // Double bet
+        // Double the bet, deal exactly one card, then the hand is done.
         currentHand.bet *= 2;
-        // Deal 1 card only
-        this.currentHandIndex = this.currentHandIndex; // logic update
-        const doubleCard = this.deck.deal();
-        currentHand.addCard(doubleCard);
+        currentHand.addCard(this.deck.deal());
         audioManager.playDealSound();
 
         this.finishCurrentHand();
@@ -182,27 +168,20 @@ export class BlackjackEngine {
     takeEvenMoney() {
         if (this.state !== 'offering-even-money') return;
 
-        // Even money pays 1:1 regardless of dealer hand
-        // We modify the hand to reflect a 1:1 payout in the final resolution
-        // or we just resolve it now.
+        // Even money pays 1:1 guaranteed. getResults() reads evenMoneyTaken.
+        this.evenMoneyTaken = true;
         this.state = 'resolving';
-        // Hack: temporarily set it to something getResults can handle or return custom
-        this.notifyUpdate("Even Money Accepted.");
+        this.notifyUpdate("Even Money!");
     }
 
     declineEvenMoney() {
         if (this.state !== 'offering-even-money') return;
 
-        // Continue to side bets then dealer turn
-        this.state = 'playing';
-        this.notifyUpdate("Side Bets...");
-
-        setTimeout(() => {
-            if (this.state === 'playing') {
-                this.state = 'player-turn';
-                this.notifyUpdate("Your turn.");
-            }
-        }, 1500);
+        // Player holds a natural blackjack, so there is nothing left to act on:
+        // reveal the dealer and resolve (3:2 win, or push if the dealer also has BJ).
+        this.state = 'dealer-turn';
+        this.notifyUpdate("Playing it out...");
+        this.playDealer();
     }
 
     split() {
@@ -214,6 +193,8 @@ export class BlackjackEngine {
         // Create new hand
         const splitCard = currentHand.cards.pop()!;
         const newHand = new Hand(currentHand.bet);
+        newHand.fromSplit = true;
+        currentHand.fromSplit = true; // 21 on either split hand pays 1:1, not 3:2.
         newHand.addCard(splitCard);
 
         // Add new hand to array
@@ -303,7 +284,11 @@ export class BlackjackEngine {
             let profit = 0;
             let result: 'win' | 'lose' | 'push' | 'blackjack' = 'push';
 
-            if (hand.isBust) {
+            if (this.evenMoneyTaken && hand.isBlackjack) {
+                // Player locked in a guaranteed 1:1 payout on their blackjack.
+                result = 'win';
+                profit = hand.bet;
+            } else if (hand.isBust) {
                 result = 'lose';
                 profit = -hand.bet;
             } else if (hand.isBlackjack) {

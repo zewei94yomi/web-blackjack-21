@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { BlackjackEngine, type GameState, type GameStateListener } from '../engine/BlackjackEngine';
 import { Hand } from '../engine/Hand';
+import { audioManager } from '../utils/audio';
+import { evaluatePerfectPairs, evaluatePoker3 } from '../engine/SideBetRules';
 
 interface GameStore {
     engine: BlackjackEngine;
@@ -91,25 +93,20 @@ export const useGameStore = create<GameStore>((set, get) => {
         isGameOver: false,
 
         initGame: () => {
-            // Any reset logic if needed
+            // Reserved for future setup; state is initialized inline above.
         },
 
         placeBet: (amount: number) => {
             const { balance } = get();
 
-            // Only allow main bet if balance can cover it
             if (amount > balance) {
                 set({ message: "Insufficient funds!" });
                 return;
             }
 
-            // NOTE: Requirement says "Player must first place Main Bet then Side Bets". 
-            // Usually in UI we can toggle. But here, let's just deduct.
-            // Actually, usually Main Bet is required to DEAL. Side bets are optional.
-
             set({ balance: balance - amount, lastOutcome: null, sideBetOutcome: null });
             engine.placeBet(amount);
-            import('../utils/audio').then(m => m.audioManager.playBetSound());
+            audioManager.playBetSound();
         },
 
         placeSideBet: (type, amount) => {
@@ -134,7 +131,7 @@ export const useGameStore = create<GameStore>((set, get) => {
                 balance: balance - amount,
                 sideBets: newSideBets
             });
-            import('../utils/audio').then(m => m.audioManager.playBetSound());
+            audioManager.playBetSound();
         },
 
         clearBets: () => {
@@ -219,22 +216,81 @@ export const useGameStore = create<GameStore>((set, get) => {
                 playerHands: engine.playerHands,
                 dealerHand: engine.dealerHand,
                 sideBets: { perfectPairs: 0, poker3: 0 },
-                sideBetOutcome: null
+                sideBetOutcome: null,
+                // Fresh game means fresh stats.
+                stats: {
+                    roundsSurvived: 0,
+                    peakBalance: 10000,
+                    maxSingleRoundProfit: 0,
+                    wins: 0,
+                    losses: 0,
+                    pushes: 0
+                }
             });
         }
     };
 });
 
-// Hook to handle payouts when game ends
-// We can use `useGameStore.subscribe` in a component or add logic to the listener above.
-// Updating the listener above to handle payouts:
-// const originalListener = useGameStore.getState().engine['listener'];
-// Re-inject listener with payout logic? 
-// No, let's just modify the store creation to include payout handling directly in the listener.
+// Side-bet outcome shape, reused by the resolver below.
+type SideBetOutcomes = NonNullable<GameStore['sideBetOutcome']>;
 
-// ... imports at top need to include evaluate helpers
-import { evaluatePerfectPairs, evaluatePoker3 } from '../engine/SideBetRules';
+/**
+ * Settle Perfect Pairs / 21+3 against the opening cards. Safe to call on every
+ * state change: it no-ops unless a side bet is live and hasn't been settled yet.
+ * This must run for blackjack and even-money rounds too, where the engine skips
+ * straight past the normal 'playing' phase.
+ */
+function resolveSideBets() {
+    const s = useGameStore.getState();
 
+    if (s.sideBetOutcome) return; // Already settled this round.
+    if (s.sideBets.perfectPairs <= 0 && s.sideBets.poker3 <= 0) return;
+    const pHand = s.playerHands[0];
+    if (!pHand || pHand.cards.length < 2 || s.dealerHand.cards.length < 1) return;
+
+    let balanceChange = 0;
+    const outcomes: SideBetOutcomes = { perfectPairs: null, poker3: null };
+    let messageStr = "";
+
+    if (s.sideBets.perfectPairs > 0) {
+        const res = evaluatePerfectPairs(pHand.cards[0], pHand.cards[1]);
+        if (res.win) {
+            const winAmount = s.sideBets.perfectPairs * res.multiplier + s.sideBets.perfectPairs;
+            balanceChange += winAmount;
+            outcomes.perfectPairs = { win: winAmount, message: `${res.name} (+${winAmount})` };
+            messageStr += `${res.name}! `;
+        } else {
+            outcomes.perfectPairs = { win: 0, message: "Lost" };
+        }
+    }
+
+    if (s.sideBets.poker3 > 0) {
+        const res = evaluatePoker3(pHand.cards[0], pHand.cards[1], s.dealerHand.cards[0]);
+        if (res.win) {
+            const winAmount = s.sideBets.poker3 * res.multiplier + s.sideBets.poker3;
+            balanceChange += winAmount;
+            outcomes.poker3 = { win: winAmount, message: `${res.name} (+${winAmount})` };
+            messageStr += `${res.name}! `;
+        } else {
+            outcomes.poker3 = { win: 0, message: "Lost" };
+        }
+    }
+
+    if (balanceChange > 0) {
+        audioManager.playWinSound();
+        useGameStore.setState(prev => ({
+            balance: prev.balance + balanceChange,
+            sideBetOutcome: outcomes,
+            stats: { ...prev.stats, peakBalance: Math.max(prev.stats.peakBalance, prev.balance + balanceChange) },
+            message: messageStr || prev.message
+        }));
+        setTimeout(() => useGameStore.getState().resetMessage(), 3000);
+    } else {
+        useGameStore.setState({ sideBetOutcome: outcomes });
+    }
+}
+
+// Re-inject the listener so state transitions drive payouts and side-bet settling.
 useGameStore.setState((state) => {
     const engine = state.engine;
     const existingListener = engine['listener'];
@@ -243,69 +299,14 @@ useGameStore.setState((state) => {
         onStateChange: (newState) => {
             existingListener?.onStateChange(newState);
 
-            const s = useGameStore.getState();
-
-            // 1. Resolve Side Bets immediately after dealing (Transition to 'playing')
-            // 'playing' is set after initial deal.
-            if (newState === 'playing' && s.playerHands[0].cards.length === 2) {
-                const pHand = s.playerHands[0];
-                const dHand = s.dealerHand;
-
-                // Only evaluate if we haven't already (e.g., after split/hit we are still 'playing')
-                // Check if this is the FIRST 'playing' state content (2 cards).
-                // Actually safer to check if sideBets > 0 and outcomes are null.
-                if ((s.sideBets.perfectPairs > 0 || s.sideBets.poker3 > 0) && !s.sideBetOutcome) {
-                    let balanceChange = 0;
-                    const outcomes: any = { perfectPairs: null, poker3: null };
-                    let messageStr = "";
-
-                    // Eval Perfect Pairs
-                    if (s.sideBets.perfectPairs > 0) {
-                        const res = evaluatePerfectPairs(pHand.cards[0], pHand.cards[1]);
-                        if (res.win) {
-                            const winAmount = s.sideBets.perfectPairs * res.multiplier + s.sideBets.perfectPairs;
-                            balanceChange += winAmount;
-                            outcomes.perfectPairs = { win: winAmount, message: `${res.name} (+${winAmount})` };
-                            messageStr += `${res.name}! `;
-                            import('../utils/audio').then(m => m.audioManager.playWinSound());
-                        } else {
-                            outcomes.perfectPairs = { win: 0, message: "Lost" };
-                        }
-                    }
-
-                    // Eval 21+3
-                    if (s.sideBets.poker3 > 0 && dHand.cards.length > 0) {
-                        const res = evaluatePoker3(pHand.cards[0], pHand.cards[1], dHand.cards[0]);
-                        if (res.win) {
-                            const winAmount = s.sideBets.poker3 * res.multiplier + s.sideBets.poker3;
-                            balanceChange += winAmount;
-                            outcomes.poker3 = { win: winAmount, message: `${res.name} (+${winAmount})` };
-                            messageStr += `${res.name}! `;
-                            import('../utils/audio').then(m => m.audioManager.playWinSound());
-                        } else {
-                            outcomes.poker3 = { win: 0, message: "Lost" };
-                        }
-                    }
-
-                    if (balanceChange > 0) {
-                        useGameStore.setState(prev => ({
-                            balance: prev.balance + balanceChange,
-                            sideBetOutcome: outcomes,
-                            // Peak balance check
-                            stats: { ...prev.stats, peakBalance: Math.max(prev.stats.peakBalance, prev.balance + balanceChange) },
-                            message: messageStr || prev.message
-                        }));
-
-                        // Clear message after a delay
-                        setTimeout(() => useGameStore.getState().resetMessage(), 3000);
-                    } else {
-                        useGameStore.setState({ sideBetOutcome: outcomes });
-                    }
-                }
+            // Settle side bets as soon as the opening cards are known. This fires
+            // for normal rounds ('playing') as well as blackjack / even-money
+            // rounds that jump straight to an offer or resolution.
+            if (newState === 'playing' || newState === 'offering-even-money' || newState === 'resolving') {
+                resolveSideBets();
             }
 
-
-            // 2. Main Game Resolution (Existing Logic + Stats)
+            // Main game resolution + stats.
             if (newState === 'resolving') {
                 const results = engine.getResults();
                 let totalProfit = 0;
@@ -320,19 +321,12 @@ useGameStore.setState((state) => {
                 results.forEach(res => {
                     const handBet = currentState.playerHands[res.handIndex].bet;
 
-                    // special case for even money
-                    if (currentState.message === "Even Money Accepted.") {
-                        totalProfit += (handBet * 1) + handBet;
-                        netRoundChange += handBet;
-                        winMsg += "Even Money Collected. ";
-                        roundWins++;
-                        import('../utils/audio').then(m => m.audioManager.playWinSound());
-                    } else if (res.result === 'win') {
+                    if (res.result === 'win') {
                         totalProfit += (handBet + res.profit);
                         netRoundChange += res.profit;
                         winMsg += `Hand ${res.handIndex + 1}: Win! `;
                         roundWins++;
-                        import('../utils/audio').then(m => m.audioManager.playWinSound());
+                        audioManager.playWinSound();
                     } else if (res.result === 'push') {
                         totalProfit += handBet;
                         winMsg += `Hand ${res.handIndex + 1}: Push. `;
@@ -342,7 +336,7 @@ useGameStore.setState((state) => {
                         netRoundChange += res.profit;
                         winMsg += `Hand ${res.handIndex + 1}: Blackjack! `;
                         roundWins++;
-                        import('../utils/audio').then(m => m.audioManager.playWinSound());
+                        audioManager.playWinSound();
                     } else {
                         netRoundChange -= handBet;
                         winMsg += `Hand ${res.handIndex + 1}: Lose. `;

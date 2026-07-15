@@ -5,6 +5,8 @@ export type HandType = 'normal' | 'blackjack' | 'bust';
 export class Hand {
     cards: Card[] = [];
     bet: number = 0;
+    /** Hands created by a split can total 21 but never count as a natural blackjack. */
+    fromSplit: boolean = false;
 
     constructor(bet: number = 0) {
         this.bet = bet;
@@ -74,7 +76,7 @@ export class Hand {
     }
 
     get isBlackjack(): boolean {
-        return this.cards.length === 2 && this.value === 21;
+        return this.cards.length === 2 && this.value === 21 && !this.fromSplit;
     }
 
     canSplit(): boolean {
