@@ -3,7 +3,9 @@ import react from '@vitejs/plugin-react'
 
 // https://vite.dev/config/
 export default defineConfig({
-  // Repo is served from https://<user>.github.io/web-blackjack-21/
-  base: '/web-blackjack-21/',
+  // Relative asset URLs work both at the GitHub Pages subpath
+  // (https://<user>.github.io/web-blackjack-21/) and at a host root
+  // such as the Vercel project (https://web-blackjack-21.vercel.app/).
+  base: './',
   plugins: [react()],
 })
