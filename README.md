@@ -4,9 +4,7 @@
 
 **[https://zewei94yomi.github.io/web-blackjack-21/](https://zewei94yomi.github.io/web-blackjack-21/)**
 
-The live game is deployed on **GitHub Pages** at `/web-blackjack-21/`. `vite.config.ts` uses `base: './'` so JS and CSS resolve under that subpath — the same place an absolute base of `/web-blackjack-21/` targets. Do not set `base` to `/`; that breaks the Pages URL.
-
-A root Vercel deploy (https://web-blackjack-21.vercel.app/) blank-screens unless `base` matches that host. With the absolute Pages base `/web-blackjack-21/`, the HTML requests `/web-blackjack-21/assets/…`, and those URLs 404 at the Vercel root.
+The live game is deployed on **GitHub Pages** with Vite `base: '/web-blackjack-21/'`.
 
 A professional-grade, high-fidelity Blackjack application built with **React 19**, **TypeScript**, and **Framer Motion**. This isn't just a simple game—it's a complete casino simulation featuring advanced side-bet logic, strict dealer protocols, and a premium "Vegas-style" user interface.
 
